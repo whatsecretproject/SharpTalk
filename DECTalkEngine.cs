@@ -72,6 +72,20 @@ namespace SharpTalk
         [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
         static extern uint TextToSpeechShutdown(IntPtr handle);
 
+        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        static extern uint TextToSpeechPause(IntPtr handle);
+
+        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        static extern uint TextToSpeechResume(IntPtr handle);
+
+        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        static extern uint TextToSpeechReset(IntPtr handle, 
+            [MarshalAs(UnmanagedType.Bool)]
+            bool bReset);
+
+        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        static extern uint TextToSpeechSync(IntPtr handle);
+
         private IntPtr handle;
         private DtCallbackRoutine callback;
 
@@ -172,6 +186,38 @@ namespace SharpTalk
         public void SetRate(uint rate)
         {
             TextToSpeechSetRate(handle, rate);
+        }
+
+        /// <summary>
+        /// Pauses TTS audio output.
+        /// </summary>
+        public void Pause()
+        {
+            TextToSpeechPause(handle);
+        }
+
+        /// <summary>
+        /// Resumes previously paused TTS audio output.
+        /// </summary>
+        public void Resume()
+        {
+            TextToSpeechResume(handle);
+        }
+
+        /// <summary>
+        /// Flushes all previously queued text from the TTS system and stops any audio output.
+        /// </summary>
+        public void Reset()
+        {
+            TextToSpeechReset(handle, true);
+        }
+
+        /// <summary>
+        /// Blocks until all previously queued text is processed.
+        /// </summary>
+        public void Sync()
+        {
+            TextToSpeechSync(handle);
         }
 
         /// <summary>
