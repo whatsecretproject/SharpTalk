@@ -86,6 +86,22 @@ namespace SharpTalk
         [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
         static extern uint TextToSpeechSync(IntPtr handle);
 
+        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        static extern uint TextToSpeechSetVolume(IntPtr handle, int type, int volume);
+
+        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        static extern uint TextToSpeechGetVolume(IntPtr handle, int type, out int volume);
+
+        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        static extern uint TextToSpeechSetSpeakerParams(IntPtr handle, ref SpeakerParams spDefs);
+
+        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        static extern uint TextToSpeechGetSpeakerParams(IntPtr handle, uint uiIndex,
+            out IntPtr ppspCur,
+            out IntPtr ppspLoLimit,
+            out IntPtr ppspHiLimit,
+            out IntPtr ppspDefault);
+
         private IntPtr handle;
         private DtCallbackRoutine callback;
 
@@ -221,12 +237,44 @@ namespace SharpTalk
         }
 
         /// <summary>
+        /// Gets the current volume of the TTS system.
+        /// </summary>
+        /// <returns></returns>
+        public int GetVolume()
+        {
+            int vol;
+            TextToSpeechGetVolume(handle, 1, out vol);
+            return vol;
+        }
+
+        /// <summary>
+        /// Sets the volume of the TTS system.
+        /// </summary>
+        /// <param name="volume">The volume to set</param>
+        public void SetVolume(int volume)
+        {
+            TextToSpeechSetVolume(handle, 1, volume);
+        }
+
+        /// <summary>
         /// Causes the engine to begin asynchronously speaking a specified phrase. If the engine is in the middle of speaking, the message passed will be queued.
         /// </summary>
         /// <param name="msg">The phrase for the engine to speak.</param>
         public void Speak(string msg)
         {
             TextToSpeechSpeak(handle, msg, (uint)SpeakFlags.Force);
+        }
+
+        public void SetSpeakerParams(SpeakerParams sp)
+        {
+            TextToSpeechSetSpeakerParams(handle, ref sp);
+        }
+
+        public SpeakerParams GetSpeakerParams()
+        {
+            IntPtr cur, lo, hi, def;
+            TextToSpeechGetSpeakerParams(handle, 0, out cur, out lo, out hi, out def);
+            return (SpeakerParams)Marshal.PtrToStructure(cur, typeof(SpeakerParams));
         }
 
         ~DECTalkEngine()
