@@ -124,7 +124,7 @@ namespace SharpTalk
         /// <param name="language">The language to load.</param>
         public DECTalkEngine(string language)
         {
-            Init(language);
+            Init(language, DefaultRate, DefaultSpeaker);
         }
 
         /// <summary>
@@ -132,10 +132,31 @@ namespace SharpTalk
         /// </summary>
         public DECTalkEngine()
         {
-            Init("US");
+            Init("US", DefaultRate, DefaultSpeaker);
         }
 
-        private void Init(string lang)
+        /// <summary>
+        /// Initialize a new instance of the engine with the specified language, rate, and speaker voice.
+        /// </summary>
+        /// <param name="language">The language ID.</param>
+        /// <param name="rate">The speaking rate to set.</param>
+        /// <param name="speaker">The speaker voice to set.</param>
+        public DECTalkEngine(string language, uint rate, Speaker speaker)
+        {
+            Init(language, rate, speaker);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the engine in US English with the specified rate and speaker voice.
+        /// </summary>
+        /// <param name="rate">The speaking rate to set.</param>
+        /// <param name="speaker">The speaker voice to set.</param>
+        public DECTalkEngine(uint rate, Speaker speaker)
+        {
+            Init("US", rate, speaker);
+        }
+
+        private void Init(string lang, uint rate, Speaker spkr)
         {
             callback = new DtCallbackRoutine(this.TTSCallback);
 
@@ -159,8 +180,8 @@ namespace SharpTalk
             }
 
             Check(TextToSpeechStartupEx(out handle, 0xFFFFFFFF, 0, callback, 0));
-            SetSpeaker(DefaultSpeaker);
-            SetRate(DefaultRate);
+            SetSpeaker(spkr);
+            SetRate(rate);
         }
 
         [StructLayout(LayoutKind.Sequential)]
