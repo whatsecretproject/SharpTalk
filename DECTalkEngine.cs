@@ -160,25 +160,28 @@ namespace SharpTalk
         {
             callback = new DtCallbackRoutine(this.TTSCallback);
 
-            uint langid = TextToSpeechStartLang(lang);
-
-            if ((langid & TTS_LANG_ERROR) != 0)
+            if (lang != LanguageCode.None)
             {
-                if (langid == TTS_NOT_SUPPORTED)
+                uint langid = TextToSpeechStartLang(lang);
+
+                if ((langid & TTS_LANG_ERROR) != 0)
                 {
-                    throw new DECTalkException("This version of DECtalk does not support multiple languages.");
+                    if (langid == TTS_NOT_SUPPORTED)
+                    {
+                        throw new DECTalkException("This version of DECtalk does not support multiple languages.");
+                    }
+                    else if (langid == TTS_NOT_AVAILABLE)
+                    {
+                        throw new DECTalkException("The specified language was not found.");
+                    }
                 }
-                else if (langid == TTS_NOT_AVAILABLE)
+
+                if (!TextToSpeechSelectLang(IntPtr.Zero, langid))
                 {
-                    throw new DECTalkException("The specified language was not found.");
+                    throw new DECTalkException("The specified language failed to load.");
                 }
             }
-
-            if (!TextToSpeechSelectLang(IntPtr.Zero, langid))
-            {
-                throw new DECTalkException("The specified language failed to load.");
-            }
-
+            
             Check(TextToSpeechStartupEx(out handle, 0xFFFFFFFF, 0, callback, 0));
             SetSpeaker(spkr);
             SetRate(rate);

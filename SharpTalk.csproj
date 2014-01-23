@@ -30,6 +30,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release\SharpTalk.XML</DocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -44,6 +45,7 @@
     <Compile Include="DECTalkEngine.cs" />
     <Compile Include="DECTalkException.cs" />
     <Compile Include="DeviceOptions.cs" />
+    <Compile Include="LanguageCode.cs" />
     <Compile Include="MMRESULT.cs" />
     <Compile Include="PhonemeEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

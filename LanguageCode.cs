@@ -35,5 +35,9 @@ namespace SharpTalk
         /// French
         /// </summary>
         public const string French = "FR";
+        /// <summary>
+        /// A special language code that tells SharpTalk not to load any language files.
+        /// </summary>
+        public const string None = "XX";
     }
 }
