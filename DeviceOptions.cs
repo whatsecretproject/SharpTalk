@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 namespace SharpTalk
 {
     [Flags]
-    public enum DeviceOptions : uint
+    internal enum DeviceOptions : uint
     {
         OwnAudioDevice =         0x00000001,
         ReportOpenError =        0x00000002,

@@ -18,6 +18,10 @@ namespace SharpTalk
         /// Fired when a phoneme event is invoked by the engine.
         /// </summary>
         public event EventHandler<PhonemeEventArgs> Phoneme;
+
+        /// <summary>
+        /// The default speaking rate assigned to new instances of the engine.
+        /// </summary>
         public const uint DefaultRate = 200;        
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -128,7 +132,7 @@ namespace SharpTalk
             var langid = TextToSpeechStartLang(lang);
             TextToSpeechSelectLang(IntPtr.Zero, langid);
             //TextToSpeechStartup(IntPtr.Zero, out handle, 0xFFFFFFFF, 0);
-            TextToSpeechStartupEx(out handle, 0xFFFFFFFF, 0, callback, 0);
+            Check(TextToSpeechStartupEx(out handle, 0xFFFFFFFF, 0, callback, 0));
             SetSpeaker(Speaker.Paul);
             SetRate(DefaultRate);
         }
@@ -170,7 +174,7 @@ namespace SharpTalk
         /// <param name="spkr">The speaker to assign</param>
         public void SetSpeaker(Speaker spkr)
         {
-            TextToSpeechSetSpeaker(handle, (uint)spkr);
+            Check(TextToSpeechSetSpeaker(handle, (uint)spkr));
         }
 
         /// <summary>
@@ -180,7 +184,7 @@ namespace SharpTalk
         public Speaker GetSpeaker()
         {
             uint spkr;
-            TextToSpeechGetSpeaker(handle, out spkr);
+            Check(TextToSpeechGetSpeaker(handle, out spkr));
             return (Speaker)spkr;
         }
 
@@ -191,7 +195,7 @@ namespace SharpTalk
         public uint GetRate()
         {
             uint rate;
-            TextToSpeechGetRate(handle, out rate);
+            Check(TextToSpeechGetRate(handle, out rate));
             return rate;
         }
 
@@ -201,7 +205,7 @@ namespace SharpTalk
         /// <param name="rate">The rate to assign.</param>
         public void SetRate(uint rate)
         {
-            TextToSpeechSetRate(handle, rate);
+            Check(TextToSpeechSetRate(handle, rate));
         }
 
         /// <summary>
@@ -209,7 +213,7 @@ namespace SharpTalk
         /// </summary>
         public void Pause()
         {
-            TextToSpeechPause(handle);
+            Check(TextToSpeechPause(handle));
         }
 
         /// <summary>
@@ -217,7 +221,7 @@ namespace SharpTalk
         /// </summary>
         public void Resume()
         {
-            TextToSpeechResume(handle);
+            Check(TextToSpeechResume(handle));
         }
 
         /// <summary>
@@ -225,7 +229,7 @@ namespace SharpTalk
         /// </summary>
         public void Reset()
         {
-            TextToSpeechReset(handle, true);
+            Check(TextToSpeechReset(handle, true));
         }
 
         /// <summary>
@@ -233,7 +237,7 @@ namespace SharpTalk
         /// </summary>
         public void Sync()
         {
-            TextToSpeechSync(handle);
+            Check(TextToSpeechSync(handle));
         }
 
         /// <summary>
@@ -243,7 +247,7 @@ namespace SharpTalk
         public int GetVolume()
         {
             int vol;
-            TextToSpeechGetVolume(handle, 1, out vol);
+            Check(TextToSpeechGetVolume(handle, 1, out vol));
             return vol;
         }
 
@@ -253,7 +257,7 @@ namespace SharpTalk
         /// <param name="volume">The volume to set</param>
         public void SetVolume(int volume)
         {
-            TextToSpeechSetVolume(handle, 1, volume);
+            Check(TextToSpeechSetVolume(handle, 1, volume));
         }
 
         /// <summary>
@@ -262,14 +266,22 @@ namespace SharpTalk
         /// <param name="msg">The phrase for the engine to speak.</param>
         public void Speak(string msg)
         {
-            TextToSpeechSpeak(handle, msg, (uint)SpeakFlags.Force);
+            Check(TextToSpeechSpeak(handle, msg, (uint)SpeakFlags.Force));
         }
 
+        /// <summary>
+        /// Sets speaker parameters for this instance.
+        /// </summary>
+        /// <param name="sp">The parameters to set.</param>
         public void SetSpeakerParams(SpeakerParams sp)
         {
-            TextToSpeechSetSpeakerParams(handle, ref sp);
+            Check(TextToSpeechSetSpeakerParams(handle, ref sp));
         }
 
+        /// <summary>
+        /// Gets the speaker parameters for this instance.
+        /// </summary>
+        /// <returns></returns>
         public SpeakerParams GetSpeakerParams()
         {
             IntPtr cur, lo, hi, def;
@@ -277,6 +289,17 @@ namespace SharpTalk
             return (SpeakerParams)Marshal.PtrToStructure(cur, typeof(SpeakerParams));
         }
 
+        private static void Check(uint code)
+        {
+            if (code != 0)
+            {
+                throw new DECTalkException((MMRESULT)code);
+            }
+        }
+
+        /// <summary>
+        /// Deallocates resources used by the engine.
+        /// </summary>
         ~DECTalkEngine()
         {
             TextToSpeechShutdown(handle);

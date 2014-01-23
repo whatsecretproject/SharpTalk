@@ -7,6 +7,9 @@ using System.Runtime.InteropServices;
 
 namespace SharpTalk
 {
+    /// <summary>
+    /// Contains parameters used to modify the sound of a TTS voice.
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct SpeakerParams
     {
@@ -173,9 +176,18 @@ namespace SharpTalk
         public short OutputGainMultiplier;
     }
 
+    /// <summary>
+    /// Provides gender selection options for SpeakerParams.
+    /// </summary>
     public enum Sex : short
     {
+        /// <summary>
+        /// Indicates a female voice.
+        /// </summary>
         Female = 0,
+        /// <summary>
+        /// Indicates a male voice.
+        /// </summary>
         Male = 1
     }
 }

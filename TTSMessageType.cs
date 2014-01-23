@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SharpTalk
 {
-    public enum TTSMessageType : uint
+    internal enum TTSMessageType : uint
     {
         Buffer = 0,
         IndexMarker = 1,

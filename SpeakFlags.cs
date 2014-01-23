@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace SharpTalk
 {
     [Flags]
-    public enum SpeakFlags : uint
+    internal enum SpeakFlags : uint
     {
         Normal = 0,
         Force = 1
