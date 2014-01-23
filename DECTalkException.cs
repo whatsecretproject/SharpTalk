@@ -15,6 +15,10 @@ namespace SharpTalk
         {            
         }
 
+        internal DECTalkException(string message) : base(message)
+        {
+        }
+
         private static string GetMessage(MMRESULT code)
         {
             switch(code)

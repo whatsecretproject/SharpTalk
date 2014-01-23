@@ -22,7 +22,12 @@ namespace SharpTalk
         /// <summary>
         /// The default speaking rate assigned to new instances of the engine.
         /// </summary>
-        public const uint DefaultRate = 200;        
+        public const uint DefaultRate = 200;
+
+        /// <summary>
+        /// The default voice assigned to new instances of the engine.
+        /// </summary>
+        public const Speaker DefaultSpeaker = Speaker.Paul;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void DtCallbackRoutine(
@@ -52,7 +57,7 @@ namespace SharpTalk
 
         [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
         static extern uint TextToSpeechStartLang(
-            [MarshalAs(UnmanagedType.LPTStr)]
+            [MarshalAs(UnmanagedType.LPStr)]
             string lang);
 
         [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -106,6 +111,10 @@ namespace SharpTalk
             out IntPtr ppspHiLimit,
             out IntPtr ppspDefault);
 
+        private const uint TTS_NOT_SUPPORTED = 0x7FFF;
+        private const uint TTS_NOT_AVAILABLE = 0x7FFE;
+        private const uint TTS_LANG_ERROR = 0x4000;
+
         private IntPtr handle;
         private DtCallbackRoutine callback;
 
@@ -129,11 +138,28 @@ namespace SharpTalk
         private void Init(string lang)
         {
             callback = new DtCallbackRoutine(this.TTSCallback);
-            var langid = TextToSpeechStartLang(lang);
-            TextToSpeechSelectLang(IntPtr.Zero, langid);
-            //TextToSpeechStartup(IntPtr.Zero, out handle, 0xFFFFFFFF, 0);
+
+            uint langid = TextToSpeechStartLang(lang);
+
+            if ((langid & TTS_LANG_ERROR) != 0)
+            {
+                if (langid == TTS_NOT_SUPPORTED)
+                {
+                    throw new DECTalkException("This version of DECtalk does not support multiple languages.");
+                }
+                else if (langid == TTS_NOT_AVAILABLE)
+                {
+                    throw new DECTalkException("The specified language was not found.");
+                }
+            }
+
+            if (!TextToSpeechSelectLang(IntPtr.Zero, langid))
+            {
+                throw new DECTalkException("The specified language failed to load.");
+            }
+
             Check(TextToSpeechStartupEx(out handle, 0xFFFFFFFF, 0, callback, 0));
-            SetSpeaker(Speaker.Paul);
+            SetSpeaker(DefaultSpeaker);
             SetRate(DefaultRate);
         }
 
