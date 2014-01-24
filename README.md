@@ -1,7 +1,7 @@
 SharpTalk
 =========
 
-A .NET wrapper for the DECtalk TTS engine.
+A .NET wrapper for the FonixTalk TTS engine.
 
 
 This project was inspired by the creative antics of those utilizing Moonbase Alpha's TTS feature. Aeiou.
@@ -9,6 +9,8 @@ This project was inspired by the creative antics of those utilizing Moonbase Alp
 I searched around exhausively and for a decent TTS engine apart from Microsoft's SAPI, which has a .NET implementation. I don't like SAPI because its features are complicated, it depends on having custom voices installed, and SSML generally makes me want to puke.
 
 Eventually, I came across DECtalk and its accompanying SDK, from which I was able to get documentation for its functions. I spent countless hours implementing these in C# using P/Invoke, and I eventually got it working.
+
+After noticing some issues with DECtalk, I migrated to the library to its successor, FonixTalk.
 
 
 Features
