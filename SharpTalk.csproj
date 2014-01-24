@@ -55,12 +55,15 @@
     <Compile Include="TTSMessageType.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="lib\dectalk.dll">
+    <Content Include="lib\FonixTalk.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\ftalk_us.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <None Include="lib\dtalk_us.dic">
+    <None Include="lib\ftalk_us.dic">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

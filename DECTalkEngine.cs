@@ -36,80 +36,73 @@ namespace SharpTalk
             uint drCallbackParameter,
             uint uiMsg);
 
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
-        static extern uint TextToSpeechStartup(
-            IntPtr hwnd,
-            out IntPtr handle,
-            uint uiDeviceNumber,
-            uint dwDeviceOptions);
-
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("FonixTalk.dll")]
         static extern uint TextToSpeechStartupEx(
             out IntPtr handle,
             uint uiDeviceNumber,
             uint dwDeviceOptions,
             DtCallbackRoutine callback, 
-            int dwCallbackParameter);
+            ref IntPtr dwCallbackParameter);
 
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("FonixTalk.dll")]
         [return : MarshalAs(UnmanagedType.Bool)]        
         static extern bool TextToSpeechSelectLang(IntPtr handle, uint lang);
 
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("FonixTalk.dll")]
         static extern uint TextToSpeechStartLang(
             [MarshalAs(UnmanagedType.LPStr)]
             string lang);
 
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("FonixTalk.dll")]
         static extern uint TextToSpeechSetSpeaker(IntPtr handle, uint speaker);
 
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("FonixTalk.dll")]
         static extern uint TextToSpeechGetSpeaker(IntPtr handle, out uint speaker);
 
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("FonixTalk.dll")]
         static extern uint TextToSpeechGetRate(IntPtr handle, out uint rate);
 
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("FonixTalk.dll")]
         static extern uint TextToSpeechSetRate(IntPtr handle, uint rate);
 
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
-        static extern uint TextToSpeechSpeak(IntPtr handle, 
+        [DllImport("FonixTalk.dll")]
+        static extern uint TextToSpeechSpeakA(IntPtr handle, 
             [MarshalAs(UnmanagedType.LPStr)] 
             string msg, 
             uint flags);
 
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("FonixTalk.dll")]
         static extern uint TextToSpeechShutdown(IntPtr handle);
 
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("FonixTalk.dll")]
         static extern uint TextToSpeechPause(IntPtr handle);
 
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("FonixTalk.dll")]
         static extern uint TextToSpeechResume(IntPtr handle);
 
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("FonixTalk.dll")]
         static extern uint TextToSpeechReset(IntPtr handle, 
             [MarshalAs(UnmanagedType.Bool)]
             bool bReset);
 
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("FonixTalk.dll")]
         static extern uint TextToSpeechSync(IntPtr handle);
 
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("FonixTalk.dll")]
         static extern uint TextToSpeechSetVolume(IntPtr handle, int type, int volume);
 
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("FonixTalk.dll")]
         static extern uint TextToSpeechGetVolume(IntPtr handle, int type, out int volume);
 
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
-        static extern uint TextToSpeechSetSpeakerParams(IntPtr handle, ref SpeakerParams spDefs);
+        [DllImport("FonixTalk.dll")]
+        static extern unsafe uint TextToSpeechSetSpeakerParams(IntPtr handle, IntPtr spDefs);
 
-        [DllImport("dectalk.dll", CallingConvention = CallingConvention.Cdecl)]
-        static extern uint TextToSpeechGetSpeakerParams(IntPtr handle, uint uiIndex,
-            out IntPtr ppspCur,
-            out IntPtr ppspLoLimit,
-            out IntPtr ppspHiLimit,
-            out IntPtr ppspDefault);
+        [DllImport("FonixTalk.dll")]
+        static extern unsafe uint TextToSpeechGetSpeakerParams(IntPtr handle, uint uiIndex,
+             out IntPtr ppspCur,
+             out IntPtr ppspLoLimit,
+             out IntPtr ppspHiLimit,
+             out IntPtr ppspDefault);
 
         private const uint TTS_NOT_SUPPORTED = 0x7FFF;
         private const uint TTS_NOT_AVAILABLE = 0x7FFE;
@@ -182,7 +175,7 @@ namespace SharpTalk
                 }
             }
             
-            Check(TextToSpeechStartupEx(out handle, 0xFFFFFFFF, 0, callback, 0));
+            Check(TextToSpeechStartupEx(out handle, 0xFFFFFFFF, 0, callback, ref handle));
             SetSpeaker(spkr);
             SetRate(rate);
         }
@@ -316,27 +309,7 @@ namespace SharpTalk
         /// <param name="msg">The phrase for the engine to speak.</param>
         public void Speak(string msg)
         {
-            Check(TextToSpeechSpeak(handle, msg, (uint)SpeakFlags.Force));
-        }
-
-        /// <summary>
-        /// Sets speaker parameters for this instance.
-        /// </summary>
-        /// <param name="sp">The parameters to set.</param>
-        public void SetSpeakerParams(SpeakerParams sp)
-        {
-            Check(TextToSpeechSetSpeakerParams(handle, ref sp));
-        }
-
-        /// <summary>
-        /// Gets the speaker parameters for this instance.
-        /// </summary>
-        /// <returns></returns>
-        public SpeakerParams GetSpeakerParams()
-        {
-            IntPtr cur, lo, hi, def;
-            TextToSpeechGetSpeakerParams(handle, 0, out cur, out lo, out hi, out def);
-            return (SpeakerParams)Marshal.PtrToStructure(cur, typeof(SpeakerParams));
+            Check(TextToSpeechSpeakA(handle, msg, (uint)SpeakFlags.Force));
         }
 
         private static void Check(uint code)
