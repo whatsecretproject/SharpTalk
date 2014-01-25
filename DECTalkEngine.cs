@@ -95,10 +95,10 @@ namespace SharpTalk
         static extern uint TextToSpeechGetVolume(IntPtr handle, int type, out int volume);
 
         [DllImport("FonixTalk.dll")]
-        static extern unsafe uint TextToSpeechSetSpeakerParams(IntPtr handle, IntPtr spDefs);
+        static extern uint TextToSpeechSetSpeakerParams(IntPtr handle, IntPtr spDefs);
 
         [DllImport("FonixTalk.dll")]
-        static extern unsafe uint TextToSpeechGetSpeakerParams(IntPtr handle, uint uiIndex,
+        static extern uint TextToSpeechGetSpeakerParams(IntPtr handle, uint uiIndex,
              out IntPtr ppspCur,
              out IntPtr ppspLoLimit,
              out IntPtr ppspHiLimit,
