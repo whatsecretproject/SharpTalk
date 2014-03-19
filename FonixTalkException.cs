@@ -9,13 +9,13 @@ namespace SharpTalk
     /// <summary>
     /// Contains information related to errors thrown by the TTS engine.
     /// </summary>
-    public sealed class DECTalkException : Exception
+    public sealed class FonixTalkException : Exception
     {
-        internal DECTalkException(MMRESULT code) : base(GetMessage(code))
+        internal FonixTalkException(MMRESULT code) : base(GetMessage(code))
         {            
         }
 
-        internal DECTalkException(string message) : base(message)
+        internal FonixTalkException(string message) : base(message)
         {
         }
 

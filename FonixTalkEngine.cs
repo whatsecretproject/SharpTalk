@@ -12,7 +12,7 @@ namespace SharpTalk
     /// <summary>
     /// Enables usage of the DECtalk TTS engine.
     /// </summary>
-    public class DECTalkEngine
+    public class FonixTalkEngine
     {
         /// <summary>
         /// Fired when a phoneme event is invoked by the engine.
@@ -104,6 +104,20 @@ namespace SharpTalk
              out IntPtr ppspHiLimit,
              out IntPtr ppspDefault);
 
+        [DllImport("FonixTalk.dll")]
+        static extern uint TextToSpeechAddBuffer(IntPtr handle, ref TTS_BUFFER_T buffer);
+
+        [DllImport("FonixTalk.dll")]
+        static extern uint TextToSpeechOpenInMemory(IntPtr handle, uint format);
+
+        [DllImport("FonixTalk.dll")]
+        static extern uint TextToSpeechCloseInMemory(IntPtr handle);
+
+        [DllImport("FonixTalk.dll")]
+        static extern uint TextToSpeechReturnBuffer(IntPtr handle, ref TTS_BUFFER_T buffer);
+
+        const uint WAVE_FORMAT_1M16 = 0x00000004;
+
         private const uint TTS_NOT_SUPPORTED = 0x7FFF;
         private const uint TTS_NOT_AVAILABLE = 0x7FFE;
         private const uint TTS_LANG_ERROR = 0x4000;
@@ -111,11 +125,14 @@ namespace SharpTalk
         private IntPtr handle;
         private DtCallbackRoutine callback;
 
+        private TTS_BUFFER_T buffer;
+        private bool bufferActive;
+
         /// <summary>
         /// Initializes a new instance of the engine.
         /// </summary>
         /// <param name="language">The language to load.</param>
-        public DECTalkEngine(string language)
+        public FonixTalkEngine(string language)
         {
             Init(language, DefaultRate, DefaultSpeaker);
         }
@@ -123,7 +140,7 @@ namespace SharpTalk
         /// <summary>
         /// Initializes a new instance of the engine in US English.
         /// </summary>
-        public DECTalkEngine()
+        public FonixTalkEngine()
         {
             Init("US", DefaultRate, DefaultSpeaker);
         }
@@ -134,7 +151,7 @@ namespace SharpTalk
         /// <param name="language">The language ID.</param>
         /// <param name="rate">The speaking rate to set.</param>
         /// <param name="speaker">The speaker voice to set.</param>
-        public DECTalkEngine(string language, uint rate, Speaker speaker)
+        public FonixTalkEngine(string language, uint rate, Speaker speaker)
         {
             Init(language, rate, speaker);
         }
@@ -144,7 +161,7 @@ namespace SharpTalk
         /// </summary>
         /// <param name="rate">The speaking rate to set.</param>
         /// <param name="speaker">The speaker voice to set.</param>
-        public DECTalkEngine(uint rate, Speaker speaker)
+        public FonixTalkEngine(uint rate, Speaker speaker)
         {
             Init("US", rate, speaker);
         }
@@ -152,6 +169,8 @@ namespace SharpTalk
         private void Init(string lang, uint rate, Speaker spkr)
         {
             callback = new DtCallbackRoutine(this.TTSCallback);
+            buffer = new TTS_BUFFER_T();
+            bufferActive = false;
 
             if (lang != LanguageCode.None)
             {
@@ -161,23 +180,60 @@ namespace SharpTalk
                 {
                     if (langid == TTS_NOT_SUPPORTED)
                     {
-                        throw new DECTalkException("This version of DECtalk does not support multiple languages.");
+                        throw new FonixTalkException("This version of DECtalk does not support multiple languages.");
                     }
                     else if (langid == TTS_NOT_AVAILABLE)
                     {
-                        throw new DECTalkException("The specified language was not found.");
+                        throw new FonixTalkException("The specified language was not found.");
                     }
                 }
 
                 if (!TextToSpeechSelectLang(IntPtr.Zero, langid))
                 {
-                    throw new DECTalkException("The specified language failed to load.");
+                    throw new FonixTalkException("The specified language failed to load.");
                 }
             }
             
             Check(TextToSpeechStartupEx(out handle, 0xFFFFFFFF, 0, callback, ref handle));
             SetSpeaker(spkr);
             SetRate(rate);
+        }
+
+        /// <summary>
+        /// Starts speech-to-memory mode and sends audio data to the buffer.
+        /// </summary>
+        /// <param name="maxSizeInBytes">The maximum size of the buffer in bytes.</param>
+        /// <returns></returns>
+        public bool StartBuffer(int maxSizeInBytes)
+        {
+            if (bufferActive) return false;
+            buffer = TTS_BUFFER_T.CreateNew(maxSizeInBytes);
+            Check(TextToSpeechOpenInMemory(handle, WAVE_FORMAT_1M16));
+            Check(TextToSpeechAddBuffer(handle, ref buffer));
+            return true;
+        }
+
+        /// <summary>
+        /// Returns the buffered data if the engine is in speech-to-memory mode. Otherwise, returns null.
+        /// </summary>
+        /// <returns></returns>
+        public byte[] GetBuffer()
+        {
+            if (!bufferActive) return null;
+            Check(TextToSpeechReturnBuffer(handle, ref buffer));
+            return buffer.GetBufferBytes();
+        }
+
+        /// <summary>
+        /// Stops speech-to-memory mode.
+        /// </summary>
+        /// <returns></returns>
+        public bool StopBuffer()
+        {
+            if (!bufferActive) return false;
+            buffer.Delete();
+            Check(TextToSpeechCloseInMemory(handle));
+            return true;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -316,14 +372,14 @@ namespace SharpTalk
         {
             if (code != 0)
             {
-                throw new DECTalkException((MMRESULT)code);
+                throw new FonixTalkException((MMRESULT)code);
             }
         }
 
         /// <summary>
         /// Deallocates resources used by the engine.
         /// </summary>
-        ~DECTalkEngine()
+        ~FonixTalkEngine()
         {
             TextToSpeechShutdown(handle);
         }
