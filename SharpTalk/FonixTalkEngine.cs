@@ -248,6 +248,7 @@ namespace SharpTalk
             Speak(input);
             Sync();
             Check(TextToSpeechCloseInMemory(handle));
+            bufferStream = null;
         }
 
         [StructLayout(LayoutKind.Sequential)]
