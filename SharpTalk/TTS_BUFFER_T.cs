@@ -24,6 +24,10 @@ namespace SharpTalk
 
         uint _reserved;
 
+        // after here additional member for managed stuff
+
+        GCHandle _pinHandle;
+
         public byte[] GetBufferBytes()
         {
             byte[] buffer = new byte[BufferLength];
@@ -34,6 +38,7 @@ namespace SharpTalk
         public static TTS_BUFFER_T CreateNew(int bufferSize)
         {
             TTS_BUFFER_T buffer = new TTS_BUFFER_T();
+            buffer._pinHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
             buffer.MaxBufferLength = (uint)bufferSize;
             buffer.DataPtr = Marshal.AllocHGlobal(bufferSize);
             
@@ -43,6 +48,7 @@ namespace SharpTalk
         private void Delete()
         {
             Marshal.FreeHGlobal(DataPtr);
+            _pinHandle.Free();
         }
 
         public void Dispose()
