@@ -10,6 +10,8 @@ namespace SharpTalk
     [StructLayout(LayoutKind.Sequential)]
     unsafe struct TTS_BUFFER_T : IDisposable
     {
+        const int BufferSize = 16384;
+
         IntPtr DataPtr;
         TTS_PHONEME_T* PhonemeArrayPtr;
         TTS_INDEX_T* IndexArrayPtr;
@@ -35,12 +37,24 @@ namespace SharpTalk
             return buffer;
         }
 
-        public static TTS_BUFFER_T CreateNew(int bufferSize)
+        public uint Length
+        {
+            get { return BufferLength; }
+        }
+
+        public void Reset()
+        {
+            BufferLength = 0;
+            PhonemeChangeCount = 0;
+            IndexMarkCount = 0;
+        }
+
+        public static TTS_BUFFER_T CreateNew()
         {
             TTS_BUFFER_T buffer = new TTS_BUFFER_T();
             buffer._pinHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            buffer.MaxBufferLength = (uint)bufferSize;
-            buffer.DataPtr = Marshal.AllocHGlobal(bufferSize);
+            buffer.MaxBufferLength = (uint)BufferSize;
+            buffer.DataPtr = Marshal.AllocHGlobal(BufferSize);
             
             return buffer;
         }

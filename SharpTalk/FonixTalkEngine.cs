@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -135,13 +136,13 @@ namespace SharpTalk
         private DtCallbackRoutine callback;
 
         private TTS_BUFFER_T buffer;
-        private bool bufferActive;
+        private MemoryStream bufferStream;
 
         // Message types
-        private uint uiIndexMsg = RegisterWindowMessage("DECtalkIndexMessage");
-        private uint uiErrorMsg = RegisterWindowMessage("DECtalkErrorMessage");
-        private uint uiBufferMsg = RegisterWindowMessage("DECtalkBufferMessage");
-        private uint uiPhonemeMsg = RegisterWindowMessage("DECtalkVisualMessage");
+        private static uint uiIndexMsg = RegisterWindowMessage("DECtalkIndexMessage");
+        private static uint uiErrorMsg = RegisterWindowMessage("DECtalkErrorMessage");
+        private static uint uiBufferMsg = RegisterWindowMessage("DECtalkBufferMessage");
+        private static uint uiPhonemeMsg = RegisterWindowMessage("DECtalkVisualMessage");
 
         /// <summary>
         /// Initializes a new instance of the engine.
@@ -184,8 +185,8 @@ namespace SharpTalk
         private void Init(string lang, uint rate, Speaker spkr)
         {
             callback = new DtCallbackRoutine(this.TTSCallback);
-            buffer = new TTS_BUFFER_T();
-            bufferActive = false;
+            buffer = TTS_BUFFER_T.CreateNew();
+            bufferStream = new MemoryStream();
 
             if (lang != LanguageCode.None)
             {
@@ -216,40 +217,19 @@ namespace SharpTalk
         }
 
         /// <summary>
-        /// Starts speech-to-memory mode and sends audio data to the buffer.
+        /// Writes speech data to an internal buffer and returns it as a byte array containing 16-bit 11025Hz mono PCM data.
         /// </summary>
-        /// <param name="maxSizeInBytes">The maximum size of the buffer in bytes.</param>
+        /// <param name="input">The input text to process.</param>
         /// <returns></returns>
-        public bool StartBuffer(int maxSizeInBytes)
+        public byte[] SpeakToMemory(string input)
         {
-            if (bufferActive) return false;
-            buffer = TTS_BUFFER_T.CreateNew(maxSizeInBytes);
+            bufferStream.SetLength(0);
             Check(TextToSpeechOpenInMemory(handle, WAVE_FORMAT_1M16));
             Check(TextToSpeechAddBuffer(handle, ref buffer));
-            return true;
-        }
-
-        /// <summary>
-        /// Returns the buffered data if the engine is in speech-to-memory mode. Otherwise, returns null.
-        /// </summary>
-        /// <returns></returns>
-        public byte[] GetBuffer()
-        {
-            if (!bufferActive) return null;
-            Check(TextToSpeechReturnBuffer(handle, ref buffer));
-            return buffer.GetBufferBytes();
-        }
-
-        /// <summary>
-        /// Stops speech-to-memory mode.
-        /// </summary>
-        /// <returns></returns>
-        public bool StopBuffer()
-        {
-            if (!bufferActive) return false;
-            buffer.Dispose();
+            Speak(input);
+            Sync();
             Check(TextToSpeechCloseInMemory(handle));
-            return true;
+            return bufferStream.ToArray();
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -283,7 +263,10 @@ namespace SharpTalk
             }
             else if (uiMsg == uiBufferMsg)
             {
-                // Handle buffer message
+                bufferStream.Write(buffer.GetBufferBytes(), 0, (int)buffer.Length);
+                Console.WriteLine("{0} bytes written", buffer.Length);
+                buffer.Reset();
+                Check(TextToSpeechAddBuffer(handle, ref buffer));
             }
             else if (uiMsg == uiErrorMsg)
             {
@@ -410,6 +393,8 @@ namespace SharpTalk
         ~FonixTalkEngine()
         {
             TextToSpeechShutdown(handle);
+            buffer.Dispose();
+            bufferStream.Dispose();
         }
 
         /// <summary>
@@ -418,6 +403,8 @@ namespace SharpTalk
         public void Dispose()
         {
             TextToSpeechShutdown(handle);
+            buffer.Dispose();
+            bufferStream.Dispose();
             GC.SuppressFinalize(this);
         }
     }

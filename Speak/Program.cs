@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using System.Threading.Tasks;
 using SharpTalk;
 
@@ -13,16 +14,15 @@ namespace Speak
         {
             Console.Title = "SharpTalk Speaking Terminal";
             FonixTalkEngine tts = new FonixTalkEngine();
-            tts.Phoneme += tts_Phoneme;
+            string msg = "";
             while(true)
             {
-                tts.Speak(Console.ReadLine());
+                msg = Console.ReadLine();
+                using(BinaryWriter writer = new BinaryWriter(File.Create("speech.pcm")))
+                {
+                    writer.Write(tts.SpeakToMemory(msg));     
+                }
             }
-        }
-
-        static void tts_Phoneme(object sender, PhonemeEventArgs e)
-        {
-            Console.WriteLine(e.Phoneme);
         }
     }
 }
