@@ -18,10 +18,7 @@ namespace Speak
             while(true)
             {
                 msg = Console.ReadLine();
-                using(BinaryWriter writer = new BinaryWriter(File.Create("speech.pcm")))
-                {
-                    writer.Write(tts.SpeakToMemory(msg));     
-                }
+                tts.Speak(msg);
             }
         }
     }

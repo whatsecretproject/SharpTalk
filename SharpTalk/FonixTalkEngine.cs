@@ -136,7 +136,7 @@ namespace SharpTalk
         private DtCallbackRoutine callback;
 
         private TTS_BUFFER_T buffer;
-        private MemoryStream bufferStream;
+        private Stream bufferStream;
 
         // Message types
         private static uint uiIndexMsg = RegisterWindowMessage("DECtalkIndexMessage");
@@ -186,7 +186,7 @@ namespace SharpTalk
         {
             callback = new DtCallbackRoutine(this.TTSCallback);
             buffer = TTS_BUFFER_T.CreateNew();
-            bufferStream = new MemoryStream();
+            bufferStream = null;
 
             if (lang != LanguageCode.None)
             {
@@ -223,13 +223,31 @@ namespace SharpTalk
         /// <returns></returns>
         public byte[] SpeakToMemory(string input)
         {
-            bufferStream.SetLength(0);
+            using (bufferStream = new MemoryStream())
+            {
+                Check(TextToSpeechOpenInMemory(handle, WAVE_FORMAT_1M16));
+                Check(TextToSpeechAddBuffer(handle, ref buffer));
+                Speak(input);
+                Sync();
+                Check(TextToSpeechCloseInMemory(handle));
+                return ((MemoryStream)bufferStream).ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Writes speech data to the specified stream as 16-bit 11025Hz mono PCM data.
+        /// </summary>
+        /// <param name="stream">The stream to write to.</param>
+        /// <param name="input">The input text to process.</param>
+        /// <returns></returns>
+        public void SpeakToStream(Stream stream, string input)
+        {
+            bufferStream = stream;
             Check(TextToSpeechOpenInMemory(handle, WAVE_FORMAT_1M16));
             Check(TextToSpeechAddBuffer(handle, ref buffer));
             Speak(input);
             Sync();
             Check(TextToSpeechCloseInMemory(handle));
-            return bufferStream.ToArray();
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -393,7 +411,6 @@ namespace SharpTalk
         {
             TextToSpeechShutdown(handle);
             buffer.Dispose();
-            bufferStream.Dispose();
         }
 
         /// <summary>
@@ -403,7 +420,6 @@ namespace SharpTalk
         {
             TextToSpeechShutdown(handle);
             buffer.Dispose();
-            bufferStream.Dispose();
             GC.SuppressFinalize(this);
         }
     }
