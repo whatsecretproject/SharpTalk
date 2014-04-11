@@ -264,7 +264,6 @@ namespace SharpTalk
             else if (uiMsg == uiBufferMsg)
             {
                 bufferStream.Write(buffer.GetBufferBytes(), 0, (int)buffer.Length);
-                Console.WriteLine("{0} bytes written", buffer.Length);
                 buffer.Reset();
                 Check(TextToSpeechAddBuffer(handle, ref buffer));
             }
