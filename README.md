@@ -30,14 +30,14 @@ How to use
 Using the library is very simple and straightforward. Here is the basic code to make the engine speak:
 
 ```cs
-DECTalkEngine tts = new DECTalkEngine();
+var tts = new FonixTalkEngine();
 tts.Speak("John Madden!");
 ```
 
 You can easily change the voice of the engine, too! For example, here is a piece of code that uses the Frank voice:
 
 ```cs
-DECTalkEngine tts = new DECTalkEngine();
+var tts = new FonixTalkEngine();
 tts.SetSpeaker(Speaker.Frank);
 tts.Speak("Here comes another Chinese earthquake! [:phone on][brbrbrbrbrbrbrbrbrbrbrbrbrbrbrbrbrbrbr]");
 ```
