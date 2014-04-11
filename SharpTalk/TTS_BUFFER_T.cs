@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace SharpTalk
 {
+    [StructLayout(LayoutKind.Sequential)]
     unsafe struct TTS_BUFFER_T : IDisposable
     {
         IntPtr DataPtr;
@@ -35,6 +36,7 @@ namespace SharpTalk
             TTS_BUFFER_T buffer = new TTS_BUFFER_T();
             buffer.MaxBufferLength = (uint)bufferSize;
             buffer.DataPtr = Marshal.AllocHGlobal(bufferSize);
+            
             return buffer;
         }
 

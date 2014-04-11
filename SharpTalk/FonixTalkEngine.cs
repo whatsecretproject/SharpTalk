@@ -138,9 +138,10 @@ namespace SharpTalk
         private bool bufferActive;
 
         // Message types
-        private uint uiID_Index_Msg = RegisterWindowMessage("DECtalkIndexMessage");
-        private uint uiID_Error_Msg = RegisterWindowMessage("DECtalkErrorMessage");
-        private uint uiID_Buffer_Msg = RegisterWindowMessage("DECtalkBufferMessage");
+        private uint uiIndexMsg = RegisterWindowMessage("DECtalkIndexMessage");
+        private uint uiErrorMsg = RegisterWindowMessage("DECtalkErrorMessage");
+        private uint uiBufferMsg = RegisterWindowMessage("DECtalkBufferMessage");
+        private uint uiPhonemeMsg = RegisterWindowMessage("DECtalkVisualMessage");
 
         /// <summary>
         /// Initializes a new instance of the engine.
@@ -274,19 +275,23 @@ namespace SharpTalk
             uint drCallbackParameter,
             uint uiMsg)
         {
-            if (uiMsg == uiID_Index_Msg && this.Phoneme != null)
+            if (uiMsg == uiPhonemeMsg && this.Phoneme != null)
             {
                 PhonemeTag tag = new PhonemeTag();
                 tag.DWData = lParam2;
                 this.Phoneme(this, new PhonemeEventArgs((char)tag.PMData.ThisPhoneme, tag.PMData.Duration));
             }
-            else if (uiMsg == uiID_Buffer_Msg)
+            else if (uiMsg == uiBufferMsg)
             {
                 // Handle buffer message
             }
-            else if (uiMsg == uiID_Error_Msg)
+            else if (uiMsg == uiErrorMsg)
             {
                 // You fucked up!
+            }
+            else if (uiMsg == uiIndexMsg)
+            {
+                // I don't even know what index messages are for...
             }
         }
 
