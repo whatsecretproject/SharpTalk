@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpTalk", "SharpTalk.csproj", "{339EA1D4-4CDE-4342-AAA0-81A35FCF87DC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpTalk", "SharpTalk\SharpTalk.csproj", "{339EA1D4-4CDE-4342-AAA0-81A35FCF87DC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Speak", "..\Speak\Speak.csproj", "{FC185343-12C9-4013-BB40-37E9DD5DD49C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Speak", "Speak\Speak.csproj", "{FC185343-12C9-4013-BB40-37E9DD5DD49C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

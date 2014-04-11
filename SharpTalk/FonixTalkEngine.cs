@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 namespace SharpTalk
 {
     /// <summary>
-    /// Enables usage of the DECtalk TTS engine.
+    /// Wraps the functions contained in the FonixTalk TTS engine.
     /// </summary>
     public class FonixTalkEngine
     {
@@ -197,6 +197,7 @@ namespace SharpTalk
             Check(TextToSpeechStartupEx(out handle, 0xFFFFFFFF, 0, callback, ref handle));
             SetSpeaker(spkr);
             SetRate(rate);
+            Speak("[:phone on]"); // Enable singing by default
         }
 
         /// <summary>
