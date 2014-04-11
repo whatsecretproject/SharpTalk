@@ -12,7 +12,7 @@ namespace SharpTalk
     /// <summary>
     /// Wraps the functions contained in the FonixTalk TTS engine.
     /// </summary>
-    public class FonixTalkEngine
+    public class FonixTalkEngine : IDisposable
     {
         /// <summary>
         /// Fired when a phoneme event is invoked by the engine.
@@ -28,6 +28,8 @@ namespace SharpTalk
         /// The default voice assigned to new instances of the engine.
         /// </summary>
         public const Speaker DefaultSpeaker = Speaker.Paul;
+
+        #region FonixTalk functions
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void DtCallbackRoutine(
@@ -116,6 +118,13 @@ namespace SharpTalk
         [DllImport("FonixTalk.dll")]
         static extern uint TextToSpeechReturnBuffer(IntPtr handle, ref TTS_BUFFER_T buffer);
 
+        #endregion
+
+        [DllImport("user32.dll")]
+        private static extern uint RegisterWindowMessage(
+            [MarshalAs(UnmanagedType.LPStr)]
+            string lpString);
+
         const uint WAVE_FORMAT_1M16 = 0x00000004;
 
         private const uint TTS_NOT_SUPPORTED = 0x7FFF;
@@ -127,6 +136,11 @@ namespace SharpTalk
 
         private TTS_BUFFER_T buffer;
         private bool bufferActive;
+
+        // Message types
+        private uint uiID_Index_Msg = RegisterWindowMessage("DECtalkIndexMessage");
+        private uint uiID_Error_Msg = RegisterWindowMessage("DECtalkErrorMessage");
+        private uint uiID_Buffer_Msg = RegisterWindowMessage("DECtalkBufferMessage");
 
         /// <summary>
         /// Initializes a new instance of the engine.
@@ -232,7 +246,7 @@ namespace SharpTalk
         public bool StopBuffer()
         {
             if (!bufferActive) return false;
-            buffer.Delete();
+            buffer.Dispose();
             Check(TextToSpeechCloseInMemory(handle));
             return true;
         }
@@ -258,13 +272,21 @@ namespace SharpTalk
             int lParam1,
             int lParam2,
             uint drCallbackParameter,
-            uint uiMsg) // For some reason uiMsg holds nonsense instead of the proper flags
+            uint uiMsg)
         {
-            if (this.Phoneme != null)
+            if (uiMsg == uiID_Index_Msg && this.Phoneme != null)
             {
                 PhonemeTag tag = new PhonemeTag();
                 tag.DWData = lParam2;
                 this.Phoneme(this, new PhonemeEventArgs((char)tag.PMData.ThisPhoneme, tag.PMData.Duration));
+            }
+            else if (uiMsg == uiID_Buffer_Msg)
+            {
+                // Handle buffer message
+            }
+            else if (uiMsg == uiID_Error_Msg)
+            {
+                // You fucked up!
             }
         }
 
@@ -378,11 +400,20 @@ namespace SharpTalk
         }
 
         /// <summary>
-        /// Deallocates resources used by the engine.
+        /// Releases all resources used by this instance.
         /// </summary>
         ~FonixTalkEngine()
         {
             TextToSpeechShutdown(handle);
+        }
+
+        /// <summary>
+        /// Releases all resources used by this instance.
+        /// </summary>
+        public void Dispose()
+        {
+            TextToSpeechShutdown(handle);
+            GC.SuppressFinalize(this);
         }
     }
 }

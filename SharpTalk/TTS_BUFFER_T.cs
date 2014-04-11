@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace SharpTalk
 {
-    unsafe struct TTS_BUFFER_T
+    unsafe struct TTS_BUFFER_T : IDisposable
     {
         IntPtr DataPtr;
         TTS_PHONEME_T* PhonemeArrayPtr;
@@ -38,9 +38,15 @@ namespace SharpTalk
             return buffer;
         }
 
-        public void Delete()
+        private void Delete()
         {
             Marshal.FreeHGlobal(DataPtr);
+        }
+
+        public void Dispose()
+        {
+            Delete();
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -32,8 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="SharpTalk">
-      <HintPath>..\SharpTalk\bin\Release\SharpTalk.dll</HintPath>
+    <Reference Include="SharpTalk, Version=1.0.5214.23316, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\SharpTalk\bin\Debug\SharpTalk.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
