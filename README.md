@@ -6,7 +6,7 @@ A .NET wrapper for the FonixTalk TTS engine.
 
 This project was inspired by the creative antics of those utilizing Moonbase Alpha's TTS feature. Aeiou.
 
-I searched around exhausively and for a decent TTS engine apart from Microsoft's SAPI, which has a .NET implementation. I don't like SAPI because its features are complicated, it depends on having custom voices installed, and SSML generally makes me want to puke.
+I searched around exhausively for a decent TTS engine apart from Microsoft's SAPI, which has a .NET implementation. I don't like SAPI because its features are complicated, it depends on having custom voices installed, and SSML generally makes me want to puke.
 
 Eventually, I came across DECtalk and its accompanying SDK, from which I was able to get documentation for its functions. I spent countless hours implementing these in C# using P/Invoke, and I eventually got it working.
 
@@ -17,6 +17,7 @@ Features
 -----
 * Asynchronous speaking
 * Phoneme events for mouth movements in games/animations
+* Stream output for exporting voice audio as PCM data
 * Sync() method makes it easy to synchronize voice output
 * Adjustable voice and speaking rate
 * Multiple engines can be independently controlled and talking at the same time
