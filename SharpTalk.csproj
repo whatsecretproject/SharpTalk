@@ -55,6 +55,8 @@
     <Compile Include="SpeakFlags.cs" />
     <Compile Include="TTSMessageType.cs" />
     <Compile Include="TTS_BUFFER_T.cs" />
+    <Compile Include="TTS_INDEX_T.cs" />
+    <Compile Include="TTS_PHONEME_T.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="lib\FonixTalk.dll">
