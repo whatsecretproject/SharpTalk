@@ -8,66 +8,76 @@ using System.Runtime.InteropServices;
 namespace SharpTalk
 {
     [StructLayout(LayoutKind.Sequential)]
-    unsafe struct TTS_BUFFER_T : IDisposable
+    unsafe class TTSBufferT : IDisposable
     {
-        const int BufferSize = 16384;
 
-        IntPtr DataPtr;
-        TTS_PHONEME_T* PhonemeArrayPtr;
-        TTS_INDEX_T* IndexArrayPtr;
-        
-        uint MaxBufferLength;
-        uint MaxPhonemeChanges;
-        uint MaxIndexMarks;
-        
-        uint BufferLength;
-        uint PhonemeChangeCount;
-        uint IndexMarkCount;
+        [StructLayout(LayoutKind.Sequential)]
+        public unsafe struct TTS_BUFFER_T
+        {
+            public const int BufferSize = 16384;
 
-        uint _reserved;
+            public IntPtr DataPtr;
+            public TTS_PHONEME_T* PhonemeArrayPtr;
+            public TTS_INDEX_T* IndexArrayPtr;
 
-        // after here additional member for managed stuff
+            public uint MaxBufferLength;
+            public uint MaxPhonemeChanges;
+            public uint MaxIndexMarks;
 
+            public uint BufferLength;
+            public uint PhonemeChangeCount;
+            public uint IndexMarkCount;
+
+            public uint _reserved;
+        }
+
+        TTS_BUFFER_T _value;
         GCHandle _pinHandle;
+
+        public TTSBufferT()
+        {
+            _value = new TTS_BUFFER_T();
+            _pinHandle = GCHandle.Alloc(this, GCHandleType.Pinned);
+            _value.MaxBufferLength = (uint)TTS_BUFFER_T.BufferSize;
+            _value.DataPtr = Marshal.AllocHGlobal(TTS_BUFFER_T.BufferSize);
+        }
 
         public byte[] GetBufferBytes()
         {
-            byte[] buffer = new byte[BufferLength];
-            Marshal.Copy(DataPtr, buffer, 0, (int)BufferLength);
+            byte[] buffer = new byte[_value.BufferLength];
+            Marshal.Copy(_value.DataPtr, buffer, 0, (int)_value.BufferLength);
             return buffer;
         }
 
         public uint Length
         {
-            get { return BufferLength; }
+            get { return _value.BufferLength; }
         }
 
         public void Reset()
         {
-            BufferLength = 0;
-            PhonemeChangeCount = 0;
-            IndexMarkCount = 0;
+            _value.BufferLength = 0;
+            _value.PhonemeChangeCount = 0;
+            _value.IndexMarkCount = 0;
         }
 
-        public static TTS_BUFFER_T CreateNew()
+        public unsafe TTS_BUFFER_T* ValuePointer
         {
-            TTS_BUFFER_T buffer = new TTS_BUFFER_T();
-            buffer._pinHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            buffer.MaxBufferLength = (uint)BufferSize;
-            buffer.DataPtr = Marshal.AllocHGlobal(BufferSize);
-            
-            return buffer;
-        }
-
-        private void Delete()
-        {
-            Marshal.FreeHGlobal(DataPtr);
-            _pinHandle.Free();
+            get
+            {
+                fixed (TTS_BUFFER_T* p = &_value)
+                {
+                    // This is fine here only because the class is always pinned.
+                    return p;
+                }
+            }
         }
 
         public void Dispose()
         {
-            Delete();
+            // No managed resources
+            Marshal.FreeHGlobal(_value.DataPtr);
+            _pinHandle.Free();
             GC.SuppressFinalize(this);
         }
     }

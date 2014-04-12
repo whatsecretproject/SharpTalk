@@ -44,11 +44,11 @@ namespace SharpTalk
             out IntPtr handle,
             uint uiDeviceNumber,
             uint dwDeviceOptions,
-            DtCallbackRoutine callback, 
+            DtCallbackRoutine callback,
             ref IntPtr dwCallbackParameter);
 
         [DllImport("FonixTalk.dll")]
-        [return : MarshalAs(UnmanagedType.Bool)]        
+        [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool TextToSpeechSelectLang(IntPtr handle, uint lang);
 
         [DllImport("FonixTalk.dll")]
@@ -69,9 +69,9 @@ namespace SharpTalk
         static extern uint TextToSpeechSetRate(IntPtr handle, uint rate);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechSpeakA(IntPtr handle, 
+        static extern uint TextToSpeechSpeakA(IntPtr handle,
             [MarshalAs(UnmanagedType.LPStr)] 
-            string msg, 
+            string msg,
             uint flags);
 
         [DllImport("FonixTalk.dll")]
@@ -84,7 +84,7 @@ namespace SharpTalk
         static extern uint TextToSpeechResume(IntPtr handle);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechReset(IntPtr handle, 
+        static extern uint TextToSpeechReset(IntPtr handle,
             [MarshalAs(UnmanagedType.Bool)]
             bool bReset);
 
@@ -108,7 +108,7 @@ namespace SharpTalk
              out IntPtr ppspDefault);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechAddBuffer(IntPtr handle, ref TTS_BUFFER_T buffer);
+        static unsafe extern uint TextToSpeechAddBuffer(IntPtr handle, TTSBufferT.TTS_BUFFER_T* buffer);
 
         [DllImport("FonixTalk.dll")]
         static extern uint TextToSpeechOpenInMemory(IntPtr handle, uint format);
@@ -117,7 +117,7 @@ namespace SharpTalk
         static extern uint TextToSpeechCloseInMemory(IntPtr handle);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechReturnBuffer(IntPtr handle, ref TTS_BUFFER_T buffer);
+        static unsafe extern uint TextToSpeechReturnBuffer(IntPtr handle, TTSBufferT.TTS_BUFFER_T* buffer);
 
         #endregion
 
@@ -135,7 +135,7 @@ namespace SharpTalk
         private IntPtr handle;
         private DtCallbackRoutine callback;
 
-        private TTS_BUFFER_T buffer;
+        private TTSBufferT buffer;
         private Stream bufferStream;
 
         // Message types
@@ -185,7 +185,7 @@ namespace SharpTalk
         private void Init(string lang, uint rate, Speaker spkr)
         {
             callback = new DtCallbackRoutine(this.TTSCallback);
-            buffer = TTS_BUFFER_T.CreateNew();
+            buffer = new TTSBufferT();
             bufferStream = null;
 
             if (lang != LanguageCode.None)
@@ -209,7 +209,7 @@ namespace SharpTalk
                     throw new FonixTalkException("The specified language failed to load.");
                 }
             }
-            
+
             Check(TextToSpeechStartupEx(out handle, 0xFFFFFFFF, 0, callback, ref handle));
             SetSpeaker(spkr);
             SetRate(rate);
@@ -226,7 +226,7 @@ namespace SharpTalk
             using (bufferStream = new MemoryStream())
             {
                 Check(TextToSpeechOpenInMemory(handle, WAVE_FORMAT_1M16));
-                Check(TextToSpeechAddBuffer(handle, ref buffer));
+                unsafe { Check(TextToSpeechAddBuffer(handle, buffer.ValuePointer)); }
                 Speak(input);
                 Sync();
                 Check(TextToSpeechCloseInMemory(handle));
@@ -244,7 +244,7 @@ namespace SharpTalk
         {
             bufferStream = stream;
             Check(TextToSpeechOpenInMemory(handle, WAVE_FORMAT_1M16));
-            Check(TextToSpeechAddBuffer(handle, ref buffer));
+            unsafe { Check(TextToSpeechAddBuffer(handle, buffer.ValuePointer)); }
             Speak(input);
             Sync();
             Check(TextToSpeechCloseInMemory(handle));
@@ -284,7 +284,7 @@ namespace SharpTalk
             {
                 bufferStream.Write(buffer.GetBufferBytes(), 0, (int)buffer.Length);
                 buffer.Reset();
-                Check(TextToSpeechAddBuffer(handle, ref buffer));
+                unsafe { Check(TextToSpeechAddBuffer(handle, buffer.ValuePointer)); }
             }
             else if (uiMsg == uiErrorMsg)
             {
