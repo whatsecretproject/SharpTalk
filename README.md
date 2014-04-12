@@ -38,7 +38,7 @@ You can easily change the voice of the engine, too! For example, to use the Fran
 
 ```cs
 var tts = new FonixTalkEngine();
-tts.SetSpeaker(Speaker.Frank);
+tts.Voice = TTSVoice.Frank;
 tts.Speak("Here comes another Chinese earthquake! [brbrbrbrbrbrbrbrbrbrbrbrbrbrbrbrbrbrbr]");
 ```
 
