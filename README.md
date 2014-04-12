@@ -10,7 +10,7 @@ I searched around exhausively for a decent TTS engine apart from Microsoft's SAP
 
 Eventually, I came across DECtalk and its accompanying SDK, from which I was able to get documentation for its functions. I spent countless hours implementing these in C# using P/Invoke, and I eventually got it working.
 
-After noticing some issues with DECtalk, I migrated to the library to its successor, FonixTalk.
+After noticing some issues with DECtalk, I migrated the library to its successor, FonixTalk.
 
 
 Features
@@ -34,10 +34,18 @@ var tts = new FonixTalkEngine();
 tts.Speak("John Madden!");
 ```
 
-You can easily change the voice of the engine, too! For example, here is a piece of code that uses the Frank voice:
+You can easily change the voice of the engine, too! For example, to use the Frank voice, just add one line:
 
 ```cs
 var tts = new FonixTalkEngine();
 tts.SetSpeaker(Speaker.Frank);
-tts.Speak("Here comes another Chinese earthquake! [:phone on][brbrbrbrbrbrbrbrbrbrbrbrbrbrbrbrbrbrbr]");
+tts.Speak("Here comes another Chinese earthquake! [brbrbrbrbrbrbrbrbrbrbrbrbrbrbrbrbrbrbr]");
+```
+
+Exporting speech audio to memory is just as simple:
+
+```cs
+var tts = new FonixTalkEngine();
+byte[] audioBytes = tts.SpeakToMemory("Eat your heart out, SAPI!");
+// Process audio data here
 ```
