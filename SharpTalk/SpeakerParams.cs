@@ -135,8 +135,7 @@ namespace SharpTalk
         public short Loudness;
 
         /// <summary>
-        /// (f0-dependent spectral tilt in % of max)frm 75 to 90 for 10to8
-        /// In other words, not the slightest clue what this does.
+        /// Not the slightest clue what this does.
         /// </summary>
         public short SpectralTilt;
 

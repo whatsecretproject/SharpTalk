@@ -98,7 +98,7 @@ namespace SharpTalk
         static extern MMRESULT TextToSpeechGetVolume(IntPtr handle, int type, out int volume);
 
         [DllImport("FonixTalk.dll")]
-        static extern unsafe MMRESULT TextToSpeechSetSpeakerParams(IntPtr handle, SpeakerParams* spDefs);
+        static extern unsafe MMRESULT TextToSpeechSetSpeakerParams(IntPtr handle, IntPtr spDefs);
 
         [DllImport("FonixTalk.dll")]
         static extern unsafe MMRESULT TextToSpeechGetSpeakerParams(IntPtr handle, uint uiIndex,
@@ -126,6 +126,9 @@ namespace SharpTalk
             [MarshalAs(UnmanagedType.LPStr)]
             string lpString);
 
+        [DllImport("kernel32.dll", EntryPoint = "CopyMemory", SetLastError = false)]
+        private static extern void CopyMemory(IntPtr dest, IntPtr src, uint count);
+
         private const uint WAVE_FORMAT_1M16 = 0x00000004;
 
         private const uint TTS_NOT_SUPPORTED = 0x7FFF;
@@ -137,6 +140,8 @@ namespace SharpTalk
 
         private TTSBufferT buffer;
         private Stream bufferStream;
+
+        private IntPtr speakerParamsPtr, dummy1, dummy2, dummy3;
 
         // Message types
         private static uint uiIndexMsg = RegisterWindowMessage("DECtalkIndexMessage");
@@ -343,15 +348,25 @@ namespace SharpTalk
         /// <returns></returns>
         public SpeakerParams GetSpeakerParams()
         {
-            IntPtr
-                    cur = IntPtr.Zero,
-                    lo = IntPtr.Zero,
-                    hi = IntPtr.Zero,
-                    def = IntPtr.Zero;
+            Check(TextToSpeechGetSpeakerParams(handle, 0, out speakerParamsPtr, out dummy1, out dummy2, out dummy3));
+            return (SpeakerParams)Marshal.PtrToStructure(speakerParamsPtr, typeof(SpeakerParams));
+        }
 
-            Check(TextToSpeechGetSpeakerParams(handle, 1, out cur, out lo, out hi, out def));
-            
-            return (SpeakerParams)Marshal.PtrToStructure(def, typeof(SpeakerParams));
+        /// <summary>
+        /// Sets the current speaker parameters.
+        /// </summary>
+        /// <param name="sp">The parameters to pass to the engine.</param>
+        public void SetSpeakerParams(SpeakerParams sp)
+        {
+            Check(TextToSpeechGetSpeakerParams(handle, 0, out speakerParamsPtr, out dummy1, out dummy2, out dummy3));
+
+            int size = Marshal.SizeOf(typeof(SpeakerParams));            
+            IntPtr tempPtr = Marshal.AllocHGlobal(size);
+            Marshal.StructureToPtr(sp, tempPtr, false);
+            CopyMemory(speakerParamsPtr, tempPtr, (uint)size);
+            Marshal.FreeHGlobal(tempPtr);
+
+            Check(TextToSpeechSetSpeakerParams(handle, speakerParamsPtr));            
         }
 
         /// <summary>
