@@ -28,7 +28,7 @@ namespace SharpTalk
         /// <summary>
         /// The default voice assigned to new instances of the engine.
         /// </summary>
-        public const Speaker DefaultSpeaker = Speaker.Paul;
+        public const TTSVoice DefaultSpeaker = TTSVoice.Paul;
 
         #region FonixTalk functions
 
@@ -40,7 +40,7 @@ namespace SharpTalk
             uint uiMsg);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechStartupEx(
+        static extern MMRESULT TextToSpeechStartupEx(
             out IntPtr handle,
             uint uiDeviceNumber,
             uint dwDeviceOptions,
@@ -57,67 +57,67 @@ namespace SharpTalk
             string lang);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechSetSpeaker(IntPtr handle, uint speaker);
+        static extern MMRESULT TextToSpeechSetSpeaker(IntPtr handle, TTSVoice speaker);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechGetSpeaker(IntPtr handle, out uint speaker);
+        static extern MMRESULT TextToSpeechGetSpeaker(IntPtr handle, out TTSVoice speaker);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechGetRate(IntPtr handle, out uint rate);
+        static extern MMRESULT TextToSpeechGetRate(IntPtr handle, out uint rate);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechSetRate(IntPtr handle, uint rate);
+        static extern MMRESULT TextToSpeechSetRate(IntPtr handle, uint rate);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechSpeakA(IntPtr handle,
+        static extern MMRESULT TextToSpeechSpeakA(IntPtr handle,
             [MarshalAs(UnmanagedType.LPStr)] 
             string msg,
             uint flags);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechShutdown(IntPtr handle);
+        static extern MMRESULT TextToSpeechShutdown(IntPtr handle);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechPause(IntPtr handle);
+        static extern MMRESULT TextToSpeechPause(IntPtr handle);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechResume(IntPtr handle);
+        static extern MMRESULT TextToSpeechResume(IntPtr handle);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechReset(IntPtr handle,
+        static extern MMRESULT TextToSpeechReset(IntPtr handle,
             [MarshalAs(UnmanagedType.Bool)]
             bool bReset);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechSync(IntPtr handle);
+        static extern MMRESULT TextToSpeechSync(IntPtr handle);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechSetVolume(IntPtr handle, int type, int volume);
+        static extern MMRESULT TextToSpeechSetVolume(IntPtr handle, int type, int volume);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechGetVolume(IntPtr handle, int type, out int volume);
+        static extern MMRESULT TextToSpeechGetVolume(IntPtr handle, int type, out int volume);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechSetSpeakerParams(IntPtr handle, IntPtr spDefs);
+        static extern unsafe MMRESULT TextToSpeechSetSpeakerParams(IntPtr handle, SpeakerParams* spDefs);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechGetSpeakerParams(IntPtr handle, uint uiIndex,
+        static extern unsafe MMRESULT TextToSpeechGetSpeakerParams(IntPtr handle, uint uiIndex,
              out IntPtr ppspCur,
              out IntPtr ppspLoLimit,
              out IntPtr ppspHiLimit,
              out IntPtr ppspDefault);
 
         [DllImport("FonixTalk.dll")]
-        static unsafe extern uint TextToSpeechAddBuffer(IntPtr handle, TTSBufferT.TTS_BUFFER_T* buffer);
+        static unsafe extern MMRESULT TextToSpeechAddBuffer(IntPtr handle, TTSBufferT.TTS_BUFFER_T* buffer);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechOpenInMemory(IntPtr handle, uint format);
+        static extern MMRESULT TextToSpeechOpenInMemory(IntPtr handle, uint format);
 
         [DllImport("FonixTalk.dll")]
-        static extern uint TextToSpeechCloseInMemory(IntPtr handle);
+        static extern MMRESULT TextToSpeechCloseInMemory(IntPtr handle);
 
         [DllImport("FonixTalk.dll")]
-        static unsafe extern uint TextToSpeechReturnBuffer(IntPtr handle, TTSBufferT.TTS_BUFFER_T* buffer);
+        static unsafe extern MMRESULT TextToSpeechReturnBuffer(IntPtr handle, TTSBufferT.TTS_BUFFER_T* buffer);
 
         #endregion
 
@@ -126,7 +126,7 @@ namespace SharpTalk
             [MarshalAs(UnmanagedType.LPStr)]
             string lpString);
 
-        const uint WAVE_FORMAT_1M16 = 0x00000004;
+        private const uint WAVE_FORMAT_1M16 = 0x00000004;
 
         private const uint TTS_NOT_SUPPORTED = 0x7FFF;
         private const uint TTS_NOT_AVAILABLE = 0x7FFE;
@@ -167,7 +167,7 @@ namespace SharpTalk
         /// <param name="language">The language ID.</param>
         /// <param name="rate">The speaking rate to set.</param>
         /// <param name="speaker">The speaker voice to set.</param>
-        public FonixTalkEngine(string language, uint rate, Speaker speaker)
+        public FonixTalkEngine(string language, uint rate, TTSVoice speaker)
         {
             Init(language, rate, speaker);
         }
@@ -177,12 +177,12 @@ namespace SharpTalk
         /// </summary>
         /// <param name="rate">The speaking rate to set.</param>
         /// <param name="speaker">The speaker voice to set.</param>
-        public FonixTalkEngine(uint rate, Speaker speaker)
+        public FonixTalkEngine(uint rate, TTSVoice speaker)
         {
-            Init("US", rate, speaker);
+            Init(LanguageCode.EnglishUS, rate, speaker);
         }
 
-        private void Init(string lang, uint rate, Speaker spkr)
+        private void Init(string lang, uint rate, TTSVoice spkr)
         {
             callback = new DtCallbackRoutine(this.TTSCallback);
             buffer = new TTSBufferT();
@@ -211,8 +211,10 @@ namespace SharpTalk
             }
 
             Check(TextToSpeechStartupEx(out handle, 0xFFFFFFFF, 0, callback, ref handle));
-            SetSpeaker(spkr);
-            SetRate(rate);
+
+            this.Voice = spkr;
+            this.Rate = rate;
+
             Speak("[:phone on]"); // Enable singing by default
         }
 
@@ -229,6 +231,7 @@ namespace SharpTalk
                 unsafe { Check(TextToSpeechAddBuffer(handle, buffer.ValuePointer)); }
                 Speak(input);
                 Sync();
+                TextToSpeechReset(handle, false);
                 Check(TextToSpeechCloseInMemory(handle));
                 return ((MemoryStream)bufferStream).ToArray();
             }
@@ -247,8 +250,50 @@ namespace SharpTalk
             unsafe { Check(TextToSpeechAddBuffer(handle, buffer.ValuePointer)); }
             Speak(input);
             Sync();
+            TextToSpeechReset(handle, false);
             Check(TextToSpeechCloseInMemory(handle));
             bufferStream = null;
+        }
+
+        /// <summary>
+        /// Writes speech data to a PCM WAV file.
+        /// </summary>
+        /// <param name="path">The path to the file.</param>
+        /// <param name="input">The input text to process.</param>
+        public void SpeakToWAVFile(string path, string input)
+        {
+            const int HeaderSize = 44;
+            const int FormatChunkSize = 16;
+            const short WaveAudioFormat = 1;
+            const short NumChannels = 1;
+            const int SampleRate = 11025;
+            const short BitsPerSample = 16;
+            const int ByteRate = (NumChannels * BitsPerSample * SampleRate) / 8;
+            const short BlockAlign = NumChannels * BitsPerSample / 8;
+
+            using(MemoryStream dataStream = new MemoryStream())
+            {
+                SpeakToStream(dataStream, input);
+                int sizeInBytes = (int)dataStream.Length;
+                using(BinaryWriter writer = new BinaryWriter(File.Create(path), Encoding.ASCII))
+                {
+                    writer.Write("RIFF".ToCharArray());
+                    writer.Write(sizeInBytes + HeaderSize - 8);
+                    writer.Write("WAVE".ToCharArray());
+                    writer.Write("fmt ".ToCharArray());
+                    writer.Write(FormatChunkSize);
+                    writer.Write(WaveAudioFormat);
+                    writer.Write(NumChannels);
+                    writer.Write(SampleRate);
+                    writer.Write(ByteRate);
+                    writer.Write(BlockAlign);
+                    writer.Write(BitsPerSample);
+                    writer.Write("data".ToCharArray());
+                    writer.Write(sizeInBytes);
+                    dataStream.Position = 0;
+                    dataStream.CopyTo(writer.BaseStream);
+                }
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -268,11 +313,7 @@ namespace SharpTalk
             public int DWData;
         }
 
-        private void TTSCallback(
-            int lParam1,
-            int lParam2,
-            uint drCallbackParameter,
-            uint uiMsg)
+        private void TTSCallback(int lParam1, int lParam2, uint drCallbackParameter, uint uiMsg)
         {
             if (uiMsg == uiPhonemeMsg && this.Phoneme != null)
             {
@@ -297,43 +338,54 @@ namespace SharpTalk
         }
 
         /// <summary>
-        /// Sets the voice used by the engine.
-        /// </summary>
-        /// <param name="spkr">The speaker to assign</param>
-        public void SetSpeaker(Speaker spkr)
-        {
-            Check(TextToSpeechSetSpeaker(handle, (uint)spkr));
-        }
-
-        /// <summary>
-        /// Gets the voice currently being used by the engine.
+        /// Returns the current speaker parameters.
         /// </summary>
         /// <returns></returns>
-        public Speaker GetSpeaker()
+        public SpeakerParams GetSpeakerParams()
         {
-            uint spkr;
-            Check(TextToSpeechGetSpeaker(handle, out spkr));
-            return (Speaker)spkr;
+            IntPtr
+                    cur = IntPtr.Zero,
+                    lo = IntPtr.Zero,
+                    hi = IntPtr.Zero,
+                    def = IntPtr.Zero;
+
+            Check(TextToSpeechGetSpeakerParams(handle, 1, out cur, out lo, out hi, out def));
+            
+            return (SpeakerParams)Marshal.PtrToStructure(def, typeof(SpeakerParams));
         }
 
         /// <summary>
-        /// Gets the engine's current speaking rate.
+        /// Gets or sets the voice currently assigned to the engine.
         /// </summary>
-        /// <returns></returns>
-        public uint GetRate()
+        public TTSVoice Voice
         {
-            uint rate;
-            Check(TextToSpeechGetRate(handle, out rate));
-            return rate;
+            get
+            {
+                TTSVoice voice;
+                Check(TextToSpeechGetSpeaker(handle, out voice));
+                return voice;
+            }
+            set
+            {
+                Check(TextToSpeechSetSpeaker(handle, value));
+            }
         }
 
         /// <summary>
-        /// Sets the engine's current speaking rate.
+        /// Gets or sets the current speaking rate of the TTS voice.
         /// </summary>
-        /// <param name="rate">The rate to assign.</param>
-        public void SetRate(uint rate)
+        public uint Rate
         {
-            Check(TextToSpeechSetRate(handle, rate));
+            get
+            {
+                uint rate;
+                Check(TextToSpeechGetRate(handle, out rate));
+                return rate;
+            }
+            set
+            {
+                Check(TextToSpeechSetRate(handle, value));
+            }
         }
 
         /// <summary>
@@ -357,7 +409,7 @@ namespace SharpTalk
         /// </summary>
         public void Reset()
         {
-            Check(TextToSpeechReset(handle, true));
+            Check(TextToSpeechReset(handle, false));
         }
 
         /// <summary>
@@ -369,26 +421,6 @@ namespace SharpTalk
         }
 
         /// <summary>
-        /// Gets the current volume of the TTS system.
-        /// </summary>
-        /// <returns></returns>
-        public int GetVolume()
-        {
-            int vol;
-            Check(TextToSpeechGetVolume(handle, 1, out vol));
-            return vol;
-        }
-
-        /// <summary>
-        /// Sets the volume of the TTS system.
-        /// </summary>
-        /// <param name="volume">The volume to set</param>
-        public void SetVolume(int volume)
-        {
-            Check(TextToSpeechSetVolume(handle, 1, volume));
-        }
-
-        /// <summary>
         /// Causes the engine to begin asynchronously speaking a specified phrase. If the engine is in the middle of speaking, the message passed will be queued.
         /// </summary>
         /// <param name="msg">The phrase for the engine to speak.</param>
@@ -397,11 +429,11 @@ namespace SharpTalk
             Check(TextToSpeechSpeakA(handle, msg, (uint)SpeakFlags.Force));
         }
 
-        private static void Check(uint code)
+        private static void Check(MMRESULT code)
         {
-            if (code != 0)
+            if (code != MMRESULT.MMSYSERR_NOERROR)
             {
-                throw new FonixTalkException((MMRESULT)code);
+                throw new FonixTalkException(code);
             }
         }
 

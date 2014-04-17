@@ -50,7 +50,7 @@
     <Compile Include="MMRESULT.cs" />
     <Compile Include="PhonemeEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Speaker.cs" />
+    <Compile Include="TTSVoice.cs" />
     <Compile Include="SpeakerParams.cs" />
     <Compile Include="SpeakFlags.cs" />
     <Compile Include="TTSMessageType.cs" />

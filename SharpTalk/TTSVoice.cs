@@ -9,7 +9,7 @@ namespace SharpTalk
     /// <summary>
     /// Enumerates the available voices for DECtalk.
     /// </summary>
-    public enum Speaker : uint
+    public enum TTSVoice : uint
     {
         /// <summary>
         /// Default (male) voice.
