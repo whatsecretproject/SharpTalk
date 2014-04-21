@@ -7,8 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace SharpTalk
 {
-    [StructLayout(LayoutKind.Sequential)]
-    unsafe class TTSBufferT : IDisposable
+    internal class TTSBufferT : IDisposable
     {
 
         [StructLayout(LayoutKind.Sequential)]
