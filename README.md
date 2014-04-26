@@ -49,3 +49,9 @@ var tts = new FonixTalkEngine();
 byte[] audioBytes = tts.SpeakToMemory("Eat your heart out, SAPI!");
 // Process audio data here
 ```
+
+Or if you'd like a WAV file instead, SharpTalk has you covered.
+```cs
+var tts = new FonixTalkEngine();
+tts.SpeakToWAVFile("speech.wav", "[:dv gv 0 br 120][:rate 300]I'm BatMan.");
+```
