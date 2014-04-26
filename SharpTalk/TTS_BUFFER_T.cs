@@ -7,9 +7,9 @@ using System.Runtime.InteropServices;
 
 namespace SharpTalk
 {
+    [StructLayout(LayoutKind.Sequential)]
     internal unsafe class TTSBufferT : IDisposable
     {
-
         [StructLayout(LayoutKind.Sequential)]
         public unsafe struct TTS_BUFFER_T
         {
@@ -39,6 +39,11 @@ namespace SharpTalk
             _pinHandle = GCHandle.Alloc(this, GCHandleType.Pinned);
             _value.MaxBufferLength = (uint)TTS_BUFFER_T.BufferSize;
             _value.DataPtr = Marshal.AllocHGlobal(TTS_BUFFER_T.BufferSize);
+        }
+
+        public bool Full
+        {
+            get { return _value.BufferLength == _value.MaxBufferLength; }
         }
 
         public byte[] GetBufferBytes()

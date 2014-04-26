@@ -329,8 +329,13 @@ namespace SharpTalk
             else if (uiMsg == uiBufferMsg)
             {
                 bufferStream.Write(buffer.GetBufferBytes(), 0, (int)buffer.Length);
+                bool full = buffer.Full;
                 buffer.Reset();
-                unsafe { Check(TextToSpeechAddBuffer(handle, buffer.ValuePointer)); }
+
+                if (full)
+                {
+                    unsafe { Check(TextToSpeechAddBuffer(handle, buffer.ValuePointer)); }
+                }
             }
             else if (uiMsg == uiErrorMsg)
             {
