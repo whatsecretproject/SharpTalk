@@ -155,7 +155,7 @@ namespace SharpTalk
         /// <param name="language">The language to load.</param>
         public FonixTalkEngine(string language)
         {
-            Init(language, DefaultRate, DefaultSpeaker);
+            Init(language);
         }
 
         /// <summary>
@@ -163,7 +163,7 @@ namespace SharpTalk
         /// </summary>
         public FonixTalkEngine()
         {
-            Init("US", DefaultRate, DefaultSpeaker);
+            Init("US");
         }
 
         /// <summary>
@@ -174,7 +174,9 @@ namespace SharpTalk
         /// <param name="speaker">The speaker voice to set.</param>
         public FonixTalkEngine(string language, uint rate, TTSVoice speaker)
         {
-            Init(language, rate, speaker);
+            Init(language);
+            this.Voice = speaker;
+            this.Rate = rate;
         }
 
         /// <summary>
@@ -184,10 +186,12 @@ namespace SharpTalk
         /// <param name="speaker">The speaker voice to set.</param>
         public FonixTalkEngine(uint rate, TTSVoice speaker)
         {
-            Init(LanguageCode.EnglishUS, rate, speaker);
+            Init(LanguageCode.EnglishUS);
+            this.Voice = speaker;
+            this.Rate = rate;
         }
 
-        private void Init(string lang, uint rate, TTSVoice spkr)
+        private void Init(string lang)
         {
             callback = new DtCallbackRoutine(this.TTSCallback);
             buffer = new TTSBufferT();
@@ -216,9 +220,6 @@ namespace SharpTalk
             }
 
             Check(TextToSpeechStartupEx(out handle, 0xFFFFFFFF, 0, callback, ref handle));
-
-            this.Voice = spkr;
-            this.Rate = rate;
 
             Speak("[:phone on]"); // Enable singing by default
         }
