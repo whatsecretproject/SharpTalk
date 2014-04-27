@@ -13,12 +13,13 @@ namespace Speak
         static void Main(string[] args)
         {
             Console.Title = "SharpTalk Speaking Terminal";
-            FonixTalkEngine tts = new FonixTalkEngine();            
-            string msg = "";
-            while(true)
+            using (var tts = new FonixTalkEngine())
             {
-                msg = Console.ReadLine();
-                tts.Speak(msg);
+                string msg = "";
+                while ((msg = Console.ReadLine()) != "exit")
+                {
+                    tts.Speak(msg);
+                }
             }
         }
     }
