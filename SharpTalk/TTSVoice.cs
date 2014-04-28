@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SharpTalk
+﻿namespace SharpTalk
 {
     /// <summary>
     /// Enumerates the available voices for DECtalk.
     /// </summary>
-    public enum TTSVoice : uint
+    public enum TtsVoice : uint
     {
         /// <summary>
         /// Default (male) voice.

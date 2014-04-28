@@ -1,17 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 
 namespace SharpTalk
 {
     [StructLayout(LayoutKind.Sequential)]
-    internal unsafe class TTSBufferT : IDisposable
+    internal unsafe class TtsBufferManaged : IDisposable
     {
         [StructLayout(LayoutKind.Sequential)]
-        public unsafe struct TTS_BUFFER_T
+        // ReSharper disable once InconsistentNaming
+        public struct TTS_BUFFER_T
         {
             public const int BufferSize = 16384;
 
@@ -33,11 +30,11 @@ namespace SharpTalk
         TTS_BUFFER_T _value;
         GCHandle _pinHandle;
 
-        public TTSBufferT()
+        public TtsBufferManaged()
         {
             _value = new TTS_BUFFER_T();
             _pinHandle = GCHandle.Alloc(this, GCHandleType.Pinned);
-            _value.MaxBufferLength = (uint)TTS_BUFFER_T.BufferSize;
+            _value.MaxBufferLength = TTS_BUFFER_T.BufferSize;
             _value.DataPtr = Marshal.AllocHGlobal(TTS_BUFFER_T.BufferSize);
         }
 
@@ -48,7 +45,7 @@ namespace SharpTalk
 
         public byte[] GetBufferBytes()
         {
-            byte[] buffer = new byte[_value.BufferLength];
+            var buffer = new byte[_value.BufferLength];
             Marshal.Copy(_value.DataPtr, buffer, 0, (int)_value.BufferLength);
             return buffer;
         }
@@ -65,7 +62,7 @@ namespace SharpTalk
             _value.IndexMarkCount = 0;
         }
 
-        public unsafe TTS_BUFFER_T* ValuePointer
+        public TTS_BUFFER_T* ValuePointer
         {
             get
             {

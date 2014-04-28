@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Threading.Tasks;
 using SharpTalk;
 
 namespace Speak
@@ -15,7 +10,7 @@ namespace Speak
             Console.Title = "SharpTalk Speaking Terminal";
             using (var tts = new FonixTalkEngine())
             {
-                string msg = "";
+                string msg;
                 while ((msg = Console.ReadLine()) != "exit")
                 {
                     tts.Speak(msg);
