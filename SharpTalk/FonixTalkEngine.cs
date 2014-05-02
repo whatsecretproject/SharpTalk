@@ -210,7 +210,7 @@ namespace SharpTalk
         private void Init(string lang)
         {
             _callback = TtsCallback;
-            _buffer = new TtsBufferManaged();
+            _buffer = null;
             _bufferStream = null;
 
             if (lang != LanguageCode.None)
@@ -333,11 +333,13 @@ namespace SharpTalk
             using (_bufferStream = new MemoryStream())
             {
                 Check(TextToSpeechOpenInMemory(_handle, WaveFormat_1M16));
-                unsafe { Check(TextToSpeechAddBuffer(_handle, _buffer.ValuePointer)); }
-                Speak(input);
-                Sync();
-                TextToSpeechReset(_handle, false);
-                Check(TextToSpeechCloseInMemory(_handle));
+                using(ReadyBuffer())
+                {
+                    Speak(input);
+                    Sync();
+                    TextToSpeechReset(_handle, false);
+                    Check(TextToSpeechCloseInMemory(_handle));
+                }
                 return ((MemoryStream)_bufferStream).ToArray();
             }
         }
@@ -352,11 +354,13 @@ namespace SharpTalk
         {
             _bufferStream = stream;
             Check(TextToSpeechOpenInMemory(_handle, WaveFormat_1M16));
-            unsafe { Check(TextToSpeechAddBuffer(_handle, _buffer.ValuePointer)); }
-            Speak(input);
-            Sync();
-            TextToSpeechReset(_handle, false);
-            Check(TextToSpeechCloseInMemory(_handle));
+            using (ReadyBuffer())
+            {
+                Speak(input);
+                Sync();
+                TextToSpeechReset(_handle, false);
+                Check(TextToSpeechCloseInMemory(_handle));
+            }
             _bufferStream = null;
         }
 
@@ -477,6 +481,40 @@ namespace SharpTalk
             if (code != MMRESULT.MMSYSERR_NOERROR)
             {
                 throw new FonixTalkException(code);
+            }
+        }
+        
+        private BufferRaiiHelper ReadyBuffer()
+        {
+            if (_buffer != null)
+            {
+                // Buffer was created by previous call to this method
+                throw new InvalidOperationException("Buffer already exists.");
+            }
+            _buffer = new TtsBufferManaged();
+            unsafe { Check(TextToSpeechAddBuffer(_handle, _buffer.ValuePointer)); }
+            return new BufferRaiiHelper(this);
+        }
+        
+        private void FreeBuffer()
+        {
+            _buffer.Dispose();
+            _buffer = null;
+        }
+        
+        // I'm putting this here because it's the only place in this file I can think of it fits.
+        private struct BufferRaiiHelper : IDisposable
+        {
+            private readonly FonixTalkEngine _engine;
+            
+            public BufferRaiiHelper(FonixTalkEngine engine)
+            {
+                _engine = engine;
+            }
+            
+            public void Dispose()
+            {
+                _engine.FreeBuffer();
             }
         }
         #endregion
