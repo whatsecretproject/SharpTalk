@@ -123,7 +123,7 @@ namespace SharpTalk
 
         /*
         [DllImport("FonixTalk.dll")]
-        static unsafe extern MMRESULT TextToSpeechReturnBuffer(IntPtr handle, TTSBufferT.TTS_BUFFER_T* buffer);
+        static unsafe extern MMRESULT TextToSpeechReturnBuffer(IntPtr handle, TtsBufferManaged.TTS_BUFFER_T* buffer);
         */
         #endregion
 
@@ -271,11 +271,7 @@ namespace SharpTalk
                 _bufferStream.Write(_buffer.GetBufferBytes(), 0, (int)_buffer.Length);
                 var full = _buffer.Full;
                 _buffer.Reset();
-
-                if (full)
-                {
-                    unsafe { Check(TextToSpeechAddBuffer(_handle, _buffer.ValuePointer)); }
-                }
+                unsafe { Check(TextToSpeechAddBuffer(_handle, _buffer.ValuePointer)); }
             }
             else if (uiMsg == UiErrorMsg)
             {
