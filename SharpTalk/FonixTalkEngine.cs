@@ -263,7 +263,7 @@ namespace SharpTalk
         {
             if (uiMsg == UiPhonemeMsg && Phoneme != null)
             {
-                var tag = new PhonemeTag {DWData = lParam2};
+                var tag = new PhonemeTag { DWData = lParam2 };
                 Phoneme(this, new PhonemeEventArgs((char)tag.PMData.ThisPhoneme, tag.PMData.Duration));
             }
             else if (uiMsg == UiBufferMsg)
@@ -332,13 +332,12 @@ namespace SharpTalk
         {
             using (_bufferStream = new MemoryStream())
             {
-                Check(TextToSpeechOpenInMemory(_handle, WaveFormat_1M16));
-                using(ReadyBuffer())
+                using (OpenInMemory(WaveFormat_1M16))
+                using (ReadyBuffer())
                 {
                     Speak(input);
                     Sync();
                     TextToSpeechReset(_handle, false);
-                    Check(TextToSpeechCloseInMemory(_handle));
                 }
                 return ((MemoryStream)_bufferStream).ToArray();
             }
@@ -353,13 +352,12 @@ namespace SharpTalk
         public void SpeakToStream(Stream stream, string input)
         {
             _bufferStream = stream;
-            Check(TextToSpeechOpenInMemory(_handle, WaveFormat_1M16));
+            using (OpenInMemory(WaveFormat_1M16))
             using (ReadyBuffer())
             {
                 Speak(input);
                 Sync();
                 TextToSpeechReset(_handle, false);
-                Check(TextToSpeechCloseInMemory(_handle));
             }
             _bufferStream = null;
         }
@@ -380,11 +378,11 @@ namespace SharpTalk
             const int byteRate = (numChannels * bitsPerSample * sampleRate) / 8;
             const short blockAlign = numChannels * bitsPerSample / 8;
 
-            using(var dataStream = new MemoryStream())
+            using (var dataStream = new MemoryStream())
             {
                 SpeakToStream(dataStream, input);
                 var sizeInBytes = (int)dataStream.Length;
-                using(var writer = new BinaryWriter(File.Create(path), Encoding.ASCII))
+                using (var writer = new BinaryWriter(File.Create(path), Encoding.ASCII))
                 {
                     writer.Write("RIFF".ToCharArray());
                     writer.Write(sizeInBytes + headerSize - 8);
@@ -406,32 +404,23 @@ namespace SharpTalk
         }
 
         /// <summary>
-        /// Returns the current speaker parameters.
+        /// Gets or sets the current speaker parameters.
         /// </summary>
-        /// <returns></returns>
-        public SpeakerParams GetSpeakerParams()
+        public SpeakerParams SpeakerParams
         {
-            Check(TextToSpeechGetSpeakerParams(_handle, 0, out _speakerParamsPtr, out _dummy1, out _dummy2, out _dummy3));
-            return (SpeakerParams)Marshal.PtrToStructure(_speakerParamsPtr, typeof(SpeakerParams));
+            get
+            {
+                Check(TextToSpeechGetSpeakerParams(_handle, 0, out _speakerParamsPtr, out _dummy1, out _dummy2, out _dummy3));
+                return (SpeakerParams)Marshal.PtrToStructure(_speakerParamsPtr, typeof(SpeakerParams));
+            }
+            set
+            {
+                Check(TextToSpeechGetSpeakerParams(_handle, 0, out _speakerParamsPtr, out _dummy1, out _dummy2, out _dummy3));
+                Marshal.StructureToPtr(value, _speakerParamsPtr, false);
+                Check(TextToSpeechSetSpeakerParams(_handle, _speakerParamsPtr));
+            }
         }
 
-        /// <summary>
-        /// Sets the current speaker parameters.
-        /// </summary>
-        /// <param name="sp">The parameters to pass to the engine.</param>
-        public void SetSpeakerParams(SpeakerParams sp)
-        {
-            Check(TextToSpeechGetSpeakerParams(_handle, 0, out _speakerParamsPtr, out _dummy1, out _dummy2, out _dummy3));
-
-            int size = Marshal.SizeOf(typeof(SpeakerParams));            
-            IntPtr tempPtr = Marshal.AllocHGlobal(size);
-            Marshal.StructureToPtr(sp, tempPtr, false);
-            CopyMemory(_speakerParamsPtr, tempPtr, (uint)size);
-            Marshal.FreeHGlobal(tempPtr);
-
-            Check(TextToSpeechSetSpeakerParams(_handle, _speakerParamsPtr));            
-        }
-        
         /// <summary>
         /// Pauses TTS audio output.
         /// </summary>
@@ -483,7 +472,36 @@ namespace SharpTalk
                 throw new FonixTalkException(code);
             }
         }
-        
+
+        #region OpenCloseInMemory
+        private InMemoryRaiiHelper OpenInMemory(uint format)
+        {
+            Check(TextToSpeechOpenInMemory(_handle, format));
+            return new InMemoryRaiiHelper(this);
+        }
+
+        private void CloseInMemory()
+        {
+            Check(TextToSpeechCloseInMemory(_handle));
+        }
+
+        private struct InMemoryRaiiHelper : IDisposable
+        {
+            private readonly FonixTalkEngine _engine;
+
+            public InMemoryRaiiHelper(FonixTalkEngine engine)
+            {
+                _engine = engine;
+            }
+
+            public void Dispose()
+            {
+                _engine.CloseInMemory();
+            }
+        }
+        #endregion
+
+        #region Buffer
         private BufferRaiiHelper ReadyBuffer()
         {
             if (_buffer != null)
@@ -495,28 +513,29 @@ namespace SharpTalk
             unsafe { Check(TextToSpeechAddBuffer(_handle, _buffer.ValuePointer)); }
             return new BufferRaiiHelper(this);
         }
-        
+
         private void FreeBuffer()
         {
             _buffer.Dispose();
             _buffer = null;
         }
-        
+
         // I'm putting this here because it's the only place in this file I can think of it fits.
         private struct BufferRaiiHelper : IDisposable
         {
             private readonly FonixTalkEngine _engine;
-            
+
             public BufferRaiiHelper(FonixTalkEngine engine)
             {
                 _engine = engine;
             }
-            
+
             public void Dispose()
             {
                 _engine.FreeBuffer();
             }
         }
+        #endregion
         #endregion
 
         #region Disposal
@@ -526,8 +545,7 @@ namespace SharpTalk
         /// </summary>
         ~FonixTalkEngine()
         {
-            TextToSpeechShutdown(_handle);
-            _buffer.Dispose();
+            Dispose(false);
         }
 
         /// <summary>
@@ -535,9 +553,21 @@ namespace SharpTalk
         /// </summary>
         public void Dispose()
         {
+            Dispose(true);
+        }
+
+        private void Dispose(bool disposing)
+        {
             TextToSpeechShutdown(_handle);
-            _buffer.Dispose();
-            GC.SuppressFinalize(this);
+            if (_buffer != null)
+            {
+                // This is probably never called.
+                _buffer.Dispose();
+            }
+            if (disposing)
+            {
+                GC.SuppressFinalize(this);
+            }
         }
         #endregion
     }
