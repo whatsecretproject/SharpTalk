@@ -332,13 +332,12 @@ namespace SharpTalk
         {
             using (_bufferStream = new MemoryStream())
             {
-                Check(TextToSpeechOpenInMemory(_handle, WaveFormat_1M16));
+                using(OpenInMemory(WaveFormat_1M16))
                 using(ReadyBuffer())
                 {
                     Speak(input);
                     Sync();
                     TextToSpeechReset(_handle, false);
-                    Check(TextToSpeechCloseInMemory(_handle));
                 }
                 return ((MemoryStream)_bufferStream).ToArray();
             }
@@ -353,13 +352,12 @@ namespace SharpTalk
         public void SpeakToStream(Stream stream, string input)
         {
             _bufferStream = stream;
-            Check(TextToSpeechOpenInMemory(_handle, WaveFormat_1M16));
+            using(OpenInMemory(WaveFormat_1M16))
             using (ReadyBuffer())
             {
                 Speak(input);
                 Sync();
                 TextToSpeechReset(_handle, false);
-                Check(TextToSpeechCloseInMemory(_handle));
             }
             _bufferStream = null;
         }
@@ -483,7 +481,36 @@ namespace SharpTalk
                 throw new FonixTalkException(code);
             }
         }
-        
+
+        #region OpenCloseInMemory
+        private InMemoryRaiiHelper OpenInMemory(uint format)
+        {
+            Check(TextToSpeechOpenInMemory(_handle, format));
+            return new InMemoryRaiiHelper(this);
+        }
+
+        private void CloseInMemory()
+        {
+            Check(TextToSpeechCloseInMemory(_handle));
+        }
+
+        private struct InMemoryRaiiHelper : IDisposable
+        {
+            private readonly FonixTalkEngine _engine;
+
+            public InMemoryRaiiHelper(FonixTalkEngine engine)
+            {
+                _engine = engine;
+            }
+
+            public void Dispose()
+            {
+                _engine.CloseInMemory();
+            }
+        }
+        #endregion
+
+        #region Buffer
         private BufferRaiiHelper ReadyBuffer()
         {
             if (_buffer != null)
@@ -517,6 +544,7 @@ namespace SharpTalk
                 _engine.FreeBuffer();
             }
         }
+        #endregion
         #endregion
 
         #region Disposal
