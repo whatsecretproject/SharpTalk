@@ -545,8 +545,7 @@ namespace SharpTalk
         /// </summary>
         ~FonixTalkEngine()
         {
-            TextToSpeechShutdown(_handle);
-            _buffer.Dispose();
+            Dispose(false);
         }
 
         /// <summary>
@@ -554,9 +553,21 @@ namespace SharpTalk
         /// </summary>
         public void Dispose()
         {
+            Dispose(true);
+        }
+
+        private void Dispose(bool disposing)
+        {
             TextToSpeechShutdown(_handle);
-            _buffer.Dispose();
-            GC.SuppressFinalize(this);
+            if (_buffer != null)
+            {
+                // This is probably never called.
+                _buffer.Dispose();
+            }
+            if (disposing)
+            {
+                GC.SuppressFinalize(this);
+            }
         }
         #endregion
     }
